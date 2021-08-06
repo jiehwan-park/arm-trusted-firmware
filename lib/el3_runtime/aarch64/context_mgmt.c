@@ -69,12 +69,15 @@ void cm_setup_context(cpu_context_t *ctx, const entry_point_info_t *ep)
 	el3_state_t *state;
 	gp_regs_t *gp_regs;
 	u_register_t sctlr_elx, actlr_elx;
-
+	INFO("<<el3_runtime>>: cm_setup_context...\n");
 	assert(ctx != NULL);
+	INFO("<<el3_runtime>>: ctx size = %ld\n", sizeof(*ctx));
 
 	security_state = GET_SECURITY_STATE(ep->h.attr);
+	INFO("<<el3_runtime>>: security_state = %d...\n", security_state);
 
 	/* Clear any residual register values from the context */
+	INFO("<<el3_runtime>>: Clear any residual register = \n");
 	zeromem(ctx, sizeof(*ctx));
 
 	/*
@@ -89,6 +92,7 @@ void cm_setup_context(cpu_context_t *ctx, const entry_point_info_t *ep)
 	scr_el3 = read_scr();
 	scr_el3 &= ~(SCR_NS_BIT | SCR_RW_BIT | SCR_FIQ_BIT | SCR_IRQ_BIT |
 			SCR_ST_BIT | SCR_HCE_BIT);
+	INFO("<<el3_runtime>>: scr_el3-1 = 0x%lx \n", scr_el3);
 	/*
 	 * SCR_NS: Set the security state of the next EL.
 	 */
@@ -100,6 +104,7 @@ void cm_setup_context(cpu_context_t *ctx, const entry_point_info_t *ep)
 	 */
 	if (GET_RW(ep->spsr) == MODE_RW_64)
 		scr_el3 |= SCR_RW_BIT;
+	INFO("<<el3_runtime>>: scr_el3-2 = 0x%lx \n", scr_el3);
 	/*
 	 * SCR_EL3.ST: Traps Secure EL1 accesses to the Counter-timer Physical
 	 *  Secure timer registers to EL3, from AArch64 state only, if specified
@@ -107,6 +112,7 @@ void cm_setup_context(cpu_context_t *ctx, const entry_point_info_t *ep)
 	 */
 	if (EP_GET_ST(ep->h.attr) != 0U)
 		scr_el3 |= SCR_ST_BIT;
+	INFO("<<el3_runtime>>: scr_el3-3 = 0x%lx \n", scr_el3);
 
 #if RAS_TRAP_LOWER_EL_ERR_ACCESS
 	/*
@@ -114,6 +120,7 @@ void cm_setup_context(cpu_context_t *ctx, const entry_point_info_t *ep)
 	 * and RAS ERX registers from EL1 and EL2 are trapped to EL3.
 	 */
 	scr_el3 |= SCR_TERR_BIT;
+	INFO("<<el3_runtime>>: scr_el3-4 = 0x%lx \n", scr_el3);
 #endif
 
 #if !HANDLE_EA_EL3_FIRST
@@ -123,11 +130,13 @@ void cm_setup_context(cpu_context_t *ctx, const entry_point_info_t *ep)
 	 *  Aborts are taken to EL3.
 	 */
 	scr_el3 &= ~SCR_EA_BIT;
+	INFO("<<el3_runtime>>: scr_el3-5 = 0x%lx \n", scr_el3);
 #endif
 
 #if FAULT_INJECTION_SUPPORT
 	/* Enable fault injection from lower ELs */
 	scr_el3 |= SCR_FIEN_BIT;
+	INFO("<<el3_runtime>>: scr_el3-6 = 0x%lx \n", scr_el3);
 #endif
 
 #if !CTX_INCLUDE_PAUTH_REGS
@@ -142,6 +151,7 @@ void cm_setup_context(cpu_context_t *ctx, const entry_point_info_t *ep)
 	 */
 	if (security_state == NON_SECURE)
 		scr_el3 |= SCR_API_BIT | SCR_APK_BIT;
+	INFO("<<el3_runtime>>: scr_el3-7 = 0x%lx \n", scr_el3);
 #endif /* !CTX_INCLUDE_PAUTH_REGS */
 
 #if !CTX_INCLUDE_MTE_REGS || ENABLE_ASSERTIONS
@@ -156,6 +166,7 @@ void cm_setup_context(cpu_context_t *ctx, const entry_point_info_t *ep)
 #if CTX_INCLUDE_MTE_REGS
 	assert((mte == MTE_IMPLEMENTED_ELX) || (mte == MTE_IMPLEMENTED_ASY));
 	scr_el3 |= SCR_ATA_BIT;
+	INFO("<<el3_runtime>>: scr_el3-8/1 = 0x%lx \n", scr_el3);
 #else
 	/*
 	 * When MTE is only implemented at EL0, it can be enabled
@@ -170,6 +181,7 @@ void cm_setup_context(cpu_context_t *ctx, const entry_point_info_t *ep)
 	    (security_state == NON_SECURE))) {
 		scr_el3 |= SCR_ATA_BIT;
 	}
+	INFO("<<el3_runtime>>: scr_el3-8/2 = 0x%lx \n", scr_el3);
 #endif	/* CTX_INCLUDE_MTE_REGS */
 
 #ifdef IMAGE_BL31
@@ -178,6 +190,7 @@ void cm_setup_context(cpu_context_t *ctx, const entry_point_info_t *ep)
 	 *  indicated by the interrupt routing model for BL31.
 	 */
 	scr_el3 |= get_scr_el3_from_routing_model(security_state);
+	INFO("<<el3_runtime>>: scr_el3-9 = 0x%lx \n", scr_el3);
 #endif
 
 	/*
@@ -205,6 +218,7 @@ void cm_setup_context(cpu_context_t *ctx, const entry_point_info_t *ep)
 			scr_el3 |= SCR_ECVEN_BIT;
 		}
 	}
+	INFO("<<el3_runtime>>: scr_el3-10 = 0x%lx \n", scr_el3);
 
 	/* Enable S-EL2 if the next EL is EL2 and security state is secure */
 	if ((security_state == SECURE) && (GET_EL(ep->spsr) == MODE_EL2)) {
@@ -215,6 +229,7 @@ void cm_setup_context(cpu_context_t *ctx, const entry_point_info_t *ep)
 
 		scr_el3 |= SCR_EEL2_BIT;
 	}
+	INFO("<<el3_runtime>>: scr_el3-11 = 0x%lx \n", scr_el3);
 
 	/*
 	 * FEAT_AMUv1p1 virtual offset registers are only accessible from EL3
@@ -225,6 +240,7 @@ void cm_setup_context(cpu_context_t *ctx, const entry_point_info_t *ep)
 		(el_implemented(2) != EL_IMPL_NONE)) {
 		scr_el3 |= SCR_AMVOFFEN_BIT;
 	}
+	INFO("<<el3_runtime>>: scr_el3-12 = 0x%lx \n", scr_el3);
 
 	/*
 	 * Initialise SCTLR_EL1 to the reset value corresponding to the target
@@ -257,6 +273,7 @@ void cm_setup_context(cpu_context_t *ctx, const entry_point_info_t *ep)
 		sctlr_elx |= SCTLR_AARCH32_EL1_RES1 | SCTLR_CP15BEN_BIT
 					| SCTLR_NTWI_BIT | SCTLR_NTWE_BIT;
 	}
+	INFO("<<el3_runtime>>: sctlr_elx-1 = 0x%lx \n", sctlr_elx);
 
 #if ERRATA_A75_764081
 	/*
@@ -264,6 +281,7 @@ void cm_setup_context(cpu_context_t *ctx, const entry_point_info_t *ep)
 	 * SCTLR_EL1.IESB to enable Implicit Error Synchronization Barrier.
 	 */
 	sctlr_elx |= SCTLR_IESB_BIT;
+	INFO("<<el3_runtime>>: sctlr_elx-2 = 0x%lx \n", sctlr_elx);
 #endif
 
 	/* Enable WFE trap delay in SCR_EL3 if supported and configured */
@@ -283,14 +301,16 @@ void cm_setup_context(cpu_context_t *ctx, const entry_point_info_t *ep)
 			scr_el3 |= SCR_TWEDEn_BIT;
 		}
 	}
+	INFO("<<el3_runtime>>: scr_el3-13 = 0x%lx \n", scr_el3);
 
 	/*
 	 * Store the initialised SCTLR_EL1 value in the cpu_context - SCTLR_EL2
 	 * and other EL2 registers are set up by cm_prepare_ns_entry() as they
 	 * are not part of the stored cpu_context.
 	 */
+	INFO("<<el3_runtime>>: set sctlr_elx\n");
 	write_ctx_reg(get_el1_sysregs_ctx(ctx), CTX_SCTLR_EL1, sctlr_elx);
-
+	INFO("<<el3_runtime>>: set sctlr_elx...done\n");
 	/*
 	 * Base the context ACTLR_EL1 on the current value, as it is
 	 * implementation defined. The context restore process will write
@@ -298,24 +318,30 @@ void cm_setup_context(cpu_context_t *ctx, const entry_point_info_t *ep)
 	 * problems for processor cores that don't expect certain bits to
 	 * be zero.
 	 */
+	INFO("<<el3_runtime>>: set actlr_elx\n");
 	actlr_elx = read_actlr_el1();
 	write_ctx_reg((get_el1_sysregs_ctx(ctx)), (CTX_ACTLR_EL1), (actlr_elx));
+	INFO("<<el3_runtime>>: set actlr_elx...done\n");
 
 	/*
 	 * Populate EL3 state so that we've the right context
 	 * before doing ERET
 	 */
+	INFO("<<el3_runtime>>: set scr_el3\n");
 	state = get_el3state_ctx(ctx);
 	write_ctx_reg(state, CTX_SCR_EL3, scr_el3);
 	write_ctx_reg(state, CTX_ELR_EL3, ep->pc);
 	write_ctx_reg(state, CTX_SPSR_EL3, ep->spsr);
+	INFO("<<el3_runtime>>: set scr_el3...done\n");
 
 	/*
 	 * Store the X0-X7 value from the entrypoint into the context
 	 * Use memcpy as we are in control of the layout of the structures
 	 */
+	INFO("<<el3_runtime>>: set X0-X7\n");
 	gp_regs = get_gpregs_ctx(ctx);
 	memcpy(gp_regs, (void *)&ep->args, sizeof(aapcs64_params_t));
+	INFO("<<el3_runtime>>: set X0-X7...done\n");
 }
 
 /*******************************************************************************
@@ -365,8 +391,11 @@ void cm_init_context_by_index(unsigned int cpu_idx,
 void cm_init_my_context(const entry_point_info_t *ep)
 {
 	cpu_context_t *ctx;
+	INFO("<<el3_runtime>>: cm_init_my_context...\n");
 	ctx = cm_get_context(GET_SECURITY_STATE(ep->h.attr));
+	INFO("<<el3_runtime>>: run cm_setup_context...\n");
 	cm_setup_context(ctx, ep);
+	INFO("<<el3_runtime>>: cm_init_my_context...end\n");
 }
 
 /*******************************************************************************

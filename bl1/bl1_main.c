@@ -82,10 +82,11 @@ void bl1_main(void)
 
 	/* Announce our arrival */
 	NOTICE(FIRMWARE_WELCOME_STR);
+	NOTICE("BL1: Hello ~~~1\n");
 	NOTICE("BL1: %s\n", version_string);
 	NOTICE("BL1: %s\n", build_message);
 
-	INFO("BL1: RAM %p - %p\n", (void *)BL1_RAM_BASE, (void *)BL1_RAM_LIMIT);
+	NOTICE("BL1: RAM %p - %p\n", (void *)BL1_RAM_BASE, (void *)BL1_RAM_LIMIT);
 
 	print_errata_status();
 
@@ -99,6 +100,7 @@ void bl1_main(void)
 #else
 	val = read_sctlr();
 #endif
+	NOTICE("BL1: SCTLR 0x%lx\n", val);
 	assert((val & SCTLR_M_BIT) != 0);
 	assert((val & SCTLR_C_BIT) != 0);
 	assert((val & SCTLR_I_BIT) != 0);
@@ -123,6 +125,7 @@ void bl1_main(void)
 
 #if TRUSTED_BOARD_BOOT
 	/* Initialize authentication module */
+	NOTICE("BL1: TRUSTED_BOARD_BOOT enabled...\n");
 	auth_mod_init();
 #endif /* TRUSTED_BOARD_BOOT */
 
@@ -131,25 +134,31 @@ void bl1_main(void)
 
 #if ENABLE_PAUTH
 	/* Store APIAKey_EL1 key */
+	NOTICE("BL1: ENABLE_PAUTH enabled...\n");
 	bl1_apiakey[0] = read_apiakeylo_el1();
 	bl1_apiakey[1] = read_apiakeyhi_el1();
 #endif /* ENABLE_PAUTH */
 
 	/* Get the image id of next image to load and run. */
 	image_id = bl1_plat_get_next_image_id();
+	NOTICE("BL1: next image id = %d\n", image_id);
 
 	/*
 	 * We currently interpret any image id other than
 	 * BL2_IMAGE_ID as the start of firmware update.
 	 */
-	if (image_id == BL2_IMAGE_ID)
+	if (image_id == BL2_IMAGE_ID) {
+		NOTICE("BL1: loading BL2 Image\n");
 		bl1_load_bl2();
+	}
 	else
 		NOTICE("BL1-FWU: *******FWU Process Started*******\n");
 
+	NOTICE("BL1: prepare next image...\n");
 	bl1_prepare_next_image(image_id);
 
 	console_flush();
+	NOTICE("BL1: end...\n");
 }
 
 /*******************************************************************************

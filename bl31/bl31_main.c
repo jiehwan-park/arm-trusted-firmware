@@ -79,6 +79,7 @@ void __init bl31_lib_init(void)
 void bl31_setup(u_register_t arg0, u_register_t arg1, u_register_t arg2,
 		u_register_t arg3)
 {
+	NOTICE("BL31: bl31_setup...\n");
 	/* Perform early platform-specific setup */
 	bl31_early_platform_setup2(arg0, arg1, arg2, arg3);
 
@@ -161,7 +162,9 @@ void bl31_main(void)
 	 * Perform any platform specific runtime setup prior to cold boot exit
 	 * from BL31
 	 */
+	INFO("BL31: bl31_plat_runtime_setup...\n");
 	bl31_plat_runtime_setup();
+	INFO("BL31: bl31_main...end\n");
 }
 
 /*******************************************************************************
@@ -174,12 +177,14 @@ void bl31_main(void)
  ******************************************************************************/
 void bl31_set_next_image_type(uint32_t security_state)
 {
+	INFO("BL31: bl31_set_next_image_type...\n");
 	assert(sec_state_is_valid(security_state));
 	next_image_type = security_state;
 }
 
 uint32_t bl31_get_next_image_type(void)
 {
+	INFO("BL31: bl31_get_next_image_type = %d...\n",next_image_type );
 	return next_image_type;
 }
 
@@ -191,7 +196,7 @@ void __init bl31_prepare_next_image_entry(void)
 {
 	entry_point_info_t *next_image_info;
 	uint32_t image_type;
-
+	INFO("BL31: bl31_prepare_next_image_entry...\n");
 #if CTX_INCLUDE_AARCH32_REGS
 	/*
 	 * Ensure that the build flag to save AArch32 system registers in CPU
@@ -206,17 +211,23 @@ void __init bl31_prepare_next_image_entry(void)
 
 	/* Determine which image to execute next */
 	image_type = bl31_get_next_image_type();
+	INFO("BL31: bl31_get_next_image_type = %d (%s)\n", image_type, (image_type == SECURE) ? "secure" : "normal");
 
 	/* Program EL3 registers to enable entry into the next EL */
 	next_image_info = bl31_plat_get_next_image_ep_info(image_type);
 	assert(next_image_info != NULL);
+	INFO("BL31: compare security flag (%d) vs. (%ld)\n", image_type, GET_SECURITY_STATE(next_image_info->h.attr));
 	assert(image_type == GET_SECURITY_STATE(next_image_info->h.attr));
 
-	INFO("BL31: Preparing for EL3 exit to %s world\n",
-		(image_type == SECURE) ? "secure" : "normal");
+	INFO("BL31: Preparing for EL3 exit to ********* %s world **********\n", (image_type == SECURE) ? "secure" : "normal");
 	print_entry_point_info(next_image_info);
+	
+	INFO("BL31: cm_init_my_context...\n");
 	cm_init_my_context(next_image_info);
+	INFO("BL31: cm_prepare_el3_exit...(image_type=%d)\n", image_type);
+	
 	cm_prepare_el3_exit(image_type);
+	INFO("BL31: bl31_prepare_next_image_entry...end\n");
 }
 
 /*******************************************************************************
@@ -225,5 +236,6 @@ void __init bl31_prepare_next_image_entry(void)
  ******************************************************************************/
 void bl31_register_bl32_init(int32_t (*func)(void))
 {
+	INFO("BL31: bl31_register_bl32_init\n");
 	bl32_init = func;
 }

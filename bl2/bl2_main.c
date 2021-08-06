@@ -38,6 +38,7 @@ void bl2_setup(u_register_t arg0, u_register_t arg1, u_register_t arg2,
 	/* Perform early platform-specific setup */
 	bl2_early_platform_setup2(arg0, arg1, arg2, arg3);
 
+	NOTICE("BL2: bl2_setup\n");
 	/* Perform late platform-specific setup */
 	bl2_plat_arch_setup();
 
@@ -89,20 +90,24 @@ void bl2_main(void)
 	bl2_arch_setup();
 
 #if TRUSTED_BOARD_BOOT
+	NOTICE("BL2: TRUSTED_BOARD_BOOT enabled\n");
 	/* Initialize authentication module */
 	auth_mod_init();
 
 #if MEASURED_BOOT
 	/* Initialize measured boot module */
+	NOTICE("BL2: MEASURED_BOOT enabled\n");
 	measured_boot_init();
 
 #endif /* MEASURED_BOOT */
 #endif /* TRUSTED_BOARD_BOOT */
 
 	/* Initialize boot source */
+	NOTICE("BL2: Initialize boot source\n");
 	bl2_plat_preload_setup();
 
 	/* Load the subsequent bootloader images. */
+	NOTICE("BL2: Load the subsequent bootloader images\n");
 	next_bl_ep_info = bl2_load_images();
 
 #if MEASURED_BOOT
@@ -111,12 +116,14 @@ void bl2_main(void)
 #endif /* MEASURED_BOOT */
 
 #if !BL2_AT_EL3
+	NOTICE("BL2: BL2 is not working on EL3\n");
 #ifndef __aarch64__
 	/*
 	 * For AArch32 state BL1 and BL2 share the MMU setup.
 	 * Given that BL2 does not map BL1 regions, MMU needs
 	 * to be disabled in order to go back to BL1.
 	 */
+	NOTICE("BL2: disable mmu...\n");
 	disable_mmu_icache_secure();
 #endif /* !__aarch64__ */
 
@@ -134,7 +141,9 @@ void bl2_main(void)
 	 * control to the BL32 (if present) and BL33 software images will
 	 * be passed to next BL image as an argument.
 	 */
+	NOTICE("BL2: call smc - BL1_SMC_RUN_IMAGE\n");
 	smc(BL1_SMC_RUN_IMAGE, (unsigned long)next_bl_ep_info, 0, 0, 0, 0, 0, 0);
+	NOTICE("BL2: call smc - BL1_SMC_RUN_IMAGE - completed.\n");
 #else /* if BL2_AT_EL3 */
 	NOTICE("BL2: Booting " NEXT_IMAGE "\n");
 	print_entry_point_info(next_bl_ep_info);

@@ -35,7 +35,7 @@ entry_point_info_t *bl31_plat_get_next_image_ep_info(uint32_t type)
 	entry_point_info_t *next_image_info;
 
 	assert(sec_state_is_valid(type) != 0);
-
+	INFO("<<bl31_plat_get_next_image_ep_info>> type (%d)\n", type);
 	next_image_info = (type == NON_SECURE)
 			? &bl33_image_ep_info : &bl32_image_ep_info;
 
@@ -219,6 +219,7 @@ static void rpi3_dtb_add_mem_rsv(void)
 
 void bl31_platform_setup(void)
 {
+	INFO("BL31: bl31_platform_setup...\n");
 #ifdef RPI3_PRELOADED_DTB_BASE
 	/* Only modify a DTB if we know where to look for it */
 	rpi3_dtb_add_mem_rsv();
