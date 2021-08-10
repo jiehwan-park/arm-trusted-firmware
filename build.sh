@@ -13,5 +13,5 @@ make PLAT=rpi3 RPI3_PRELOADED_DTB_BASE=0x10000 PRELOADED_BL33_BASE=0x30000 SUPPO
 echo -e "\n\n${GREEN}POST : Copy Result files to RPi3 git folder${NC}\n"
 sha256sum build/rpi3/release/bl1.bin
 sha256sum build/rpi3/release/fip.bin
-cp -v build/rpi3/release/bl1.bin ../RPi3/edk2-non-osi/Platform/RaspberryPi/RPi3/TrustedFirmware/
-cp -v build/rpi3/release/fip.bin ../RPi3/edk2-non-osi/Platform/RaspberryPi/RPi3/TrustedFirmware/
+# cp -v build/rpi3/release/bl1.bin ../RPi3/edk2-non-osi/Platform/RaspberryPi/RPi3/TrustedFirmware/
+# cp -v build/rpi3/release/fip.bin ../RPi3/edk2-non-osi/Platform/RaspberryPi/RPi3/TrustedFirmware/
